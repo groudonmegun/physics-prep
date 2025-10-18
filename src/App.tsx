@@ -99,26 +99,19 @@ const SUBJECTS: SubjectKey[] = [
 
 const DEFAULT_TOPICS: Record<SubjectKey, string[]> = {
   Electromagnetism: [
-    "Coulomb's law & E-fields",
-    "Potential & Energy",
-    "Laplace/Poisson",
-    "Boundary conditions",
-    "Method of images",
-    "Capacitance & Energy",
+    "1장 기초",
+    "2장 정전기장",
+    "3.1 라플라스",
+    "3.2 영상법",
   ],
   "Modern Physics": [
-    "Relativity (SR basics)",
-    "Photon & Photoelectric",
-    "de Broglie & Matter waves",
-    "Bohr model",
-    "Wave mechanics intro",
+    "다전자 원자",
+    "분자",
+    "통계역학",
   ],
   "Analytical Mechanics": [
-    "Generalized coordinates",
-    "Constraints",
-    "Lagrangian & E-L eqs",
-    "Small oscillations",
-    "Central forces (preview)",
+    "입자계의 동역학",
+    "강체의 평면 운동",
   ],
 };
 
@@ -446,6 +439,41 @@ export default function App() {
     (b)=>setBusy(b),
     (s)=>setSummary(s)
   );
+  useEffect(() => {
+  const seeded = load(STORAGE_KEY + ":seeded", false as boolean);
+  if (seeded) return;
+
+  (async () => {
+    setBusy(true);
+    try {
+      // 과목별 순회
+      const subjects: SubjectKey[] = ["Electromagnetism","Modern Physics","Analytical Mechanics"];
+      for (const s of subjects) {
+        // 자동 정리(노트 생성)
+        await generateStudyPack(
+          s, model, apiKey, true, // <- GPT 사용 강제 (키 없으면 템플릿 생성)
+          (ns) => setNotes(prev => [...ns, ...prev]),
+          (b) => setBusy(b),
+          (msg) => setSummary(msg)
+        );
+        // 범위 퀴즈 생성
+        await generateSubjectQuiz(
+          s, notes, "Medium", model, apiKey, true,
+          (qs) => setQuiz(prev => [...qs, ...prev]),
+          (b) => setBusy(b)
+        );
+      }
+      // 대표 과목에 실제 사례도 채우기
+      await generateExamples();
+      save(STORAGE_KEY + ":seeded", true);
+    } catch(e) {
+      console.error(e);
+    } finally {
+      setBusy(false);
+    }
+  })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 }
 
 function handleGenerateSubjectQuiz(){
@@ -518,12 +546,12 @@ useEffect(() => { shuffleQuick(); /* eslint-disable-next-line */ }, [subject, qu
     [notes, subject, topic]
   );
 
-  function addNote() {
+  //function addNote() {
     if (!input.trim()) return;
     const n: Note = { id: uid("note"), subject, topic, content: input.trim(), createdAt: Date.now() };
     setNotes((prev) => [n, ...prev]);
     setInput("");
-  }
+  //}
 
   function deleteNote(id: string) {
     setNotes((prev) => prev.filter((n) => n.id !== id));
@@ -754,26 +782,24 @@ useEffect(() => { shuffleQuick(); /* eslint-disable-next-line */ }, [subject, qu
                   <label htmlFor="useGPT" className="text-sm">GPT 사용</label>
                 </div>
               </div>
-              <Textarea
-                placeholder="여기에 강의노트, 풀이, 정리 내용을 붙여넣으세요 (한국어/영어 모두 가능)."
-                value={input}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
-                className="min-h-[140px]"
-              />
-              <div className="flex gap-2">
-                <Button onClick={addNote} disabled={!input.trim()}>
-                   노트 추가
-                </Button>
-                <Button variant="secondary" onClick={doSummarize} disabled={busy}>
-                   자동 요약
-                </Button>
-                <Button variant="outline" onClick={generateQuiz} disabled={busy}>
-                   문제 생성
-                </Button>
-                <Button variant="outline" onClick={generateExamples} disabled={busy}>
-                   실제 사례
-                </Button>
-              </div>
+             <div className="border rounded px-3 py-2 text-sm bg-white">
+  이 과목은 <b>시험범위 자동 정리</b>가 적용되어 있습니다.
+  상단/우측 기능(요약·문제·모의고사·플래시카드)은 이미 준비된 노트를 기반으로 동작합니다.
+  (필요 시 GPT Key를 넣으면 더 자세한 내용으로 자동 업데이트됩니다.)
+</div>
+
+<div className="flex gap-2">
+  <Button variant="secondary" onClick={doSummarize} disabled={busy}>
+    자동 요약
+  </Button>
+  <Button variant="outline" onClick={generateQuiz} disabled={busy}>
+    문제 생성
+  </Button>
+  <Button variant="outline" onClick={generateExamples} disabled={busy}>
+    실제 사례
+  </Button>
+</div>
+
               <div className="grid md:grid-cols-2 gap-3">
                 <Card className="border-dashed">
                   <CardHeader className="py-3"><CardTitle className="text-base">자동 요약</CardTitle></CardHeader>
