@@ -49,7 +49,7 @@ export function Select({ value, onValueChange, children }: any){
 }
 export function SelectTrigger({ children }: any){ return <div className="hidden">{children}</div>; }
 export function SelectContent({ children }: any){ return <div className="hidden">{children}</div>; }
-export function SelectItem(props: any){ return null; }
+export function SelectItem(_props: any){ return null; }
 // mark component type for collector
 SelectItem.__isSelectItem = true;
 export function SelectValue(){ const ctx = useContext(SelectCtx); return <span>{ctx?.value}</span>; }
@@ -458,7 +458,7 @@ function handleGenerateSubjectQuiz(){
 
 
   // Quick quiz state
-  const [quick, setQuick] = useState<QuickItem[]>(() => load(STORAGE_KEY + ":quick", SEED_QUICK));
+  const [quick, _setQuick] = useState<QuickItem[]>(() => load(STORAGE_KEY + ":quick", SEED_QUICK));
   const [quickIndex, setQuickIndex] = useState<number>(0);
   const [quickInput, setQuickInput] = useState<string>("");
   const [quickFeedback, setQuickFeedback] = useState<string>("");
@@ -678,7 +678,7 @@ useEffect(() => { shuffleQuick(); /* eslint-disable-next-line */ }, [subject, qu
           <h1 className="text-xl font-bold">Physics Exam Prep Studio</h1>
           <Badge variant="secondary">E&M · Modern · Mechanics</Badge>
           <div className="ml-auto flex items-center gap-2">
-            <Select value={subject} onValueChange={(v) => setSubject(v as SubjectKey)}>
+            <Select value={subject} onValueChange={(v: string) => setSubject(v as SubjectKey)}>
               <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
@@ -690,9 +690,9 @@ useEffect(() => { shuffleQuick(); /* eslint-disable-next-line */ }, [subject, qu
                 ))}
               </SelectContent>
             </Select>
-            <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)}>
+            <Select value={difficulty} onValueChange={(v: string) => setDifficulty(v as any)}>
               <SelectTrigger className="w-32">
-                <SelectValue placeholder="난이도" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {(["Easy", "Medium", "Hard"] as const).map((d) => (
@@ -741,8 +741,8 @@ useEffect(() => { shuffleQuick(); /* eslint-disable-next-line */ }, [subject, qu
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex gap-2">
-                <Select value={topic} onValueChange={(v) => setTopic(v)}>
-                  <SelectTrigger className="w-64"><SelectValue placeholder="주제" /></SelectTrigger>
+                <Select value={topic} onValueChange={(v: string) => setTopic(v)}>
+                  <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {DEFAULT_TOPICS[subject].map((t) => (
                       <SelectItem key={t} value={t}>{t}</SelectItem>
@@ -750,14 +750,14 @@ useEffect(() => { shuffleQuick(); /* eslint-disable-next-line */ }, [subject, qu
                   </SelectContent>
                 </Select>
                 <div className="flex items-center gap-2 ml-auto">
-                  <Checkbox id="useGPT" checked={useGPT} onCheckedChange={(v) => setUseGPT(Boolean(v))} />
+                  <Checkbox id="useGPT" checked={useGPT} onCheckedChange={(v: boolean) => setUseGPT(Boolean(v))} />
                   <label htmlFor="useGPT" className="text-sm">GPT 사용</label>
                 </div>
               </div>
               <Textarea
                 placeholder="여기에 강의노트, 풀이, 정리 내용을 붙여넣으세요 (한국어/영어 모두 가능)."
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
                 className="min-h-[140px]"
               />
               <div className="flex gap-2">
@@ -838,8 +838,8 @@ useEffect(() => { shuffleQuick(); /* eslint-disable-next-line */ }, [subject, qu
               <CardTitle className="flex items-center gap-2"> GPT 연동</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Input placeholder="OpenAI API Key" value={apiKey} onChange={(e) => setApiKey(e.target.value)} />
-              <Input placeholder="Model (예: gpt-4o-mini)" value={model} onChange={(e) => setModel(e.target.value)} />
+              <Input placeholder="OpenAI API Key" value={apiKey} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setApiKey(e.target.value)} />
+              <Input placeholder="Model (예: gpt-4o-mini)" value={model} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setModel(e.target.value)} />
               <p className="text-xs text-neutral-500">체크박스 "GPT 사용"을 켜면 요약/문제/사례 생성에 API가 사용됩니다.</p>
             </CardContent>
           </Card>
@@ -849,7 +849,7 @@ useEffect(() => { shuffleQuick(); /* eslint-disable-next-line */ }, [subject, qu
   </CardHeader>
   <CardContent className="space-y-3">
     <div className="flex items-center gap-2">
-      <Select value={quickMode} onValueChange={(v) => setQuickMode(v as any)}>
+      <Select value={quickMode} onValueChange={(v: string) => setQuickMode(v as any)}>
         <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
         <SelectContent>
           <SelectItem value="mapping">상황→공식(EM/Mechanics)</SelectItem>
@@ -871,7 +871,7 @@ useEffect(() => { shuffleQuick(); /* eslint-disable-next-line */ }, [subject, qu
               <Input
                 placeholder={quickMode === "mapping" ? "공식/원리 (예: E=-∇V, 가우스 법칙)" : "정답 입력"}
                 value={quickInput}
-                onChange={(e) => setQuickInput(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuickInput(e.target.value)}
               />
               <Button onClick={checkQuick}>정답확인</Button>
             </div>
@@ -893,7 +893,7 @@ useEffect(() => { shuffleQuick(); /* eslint-disable-next-line */ }, [subject, qu
     })()}
   </CardContent>
 </Card>
-
+    
 
           <Card>
             <CardHeader className="pb-2">
@@ -901,7 +901,7 @@ useEffect(() => { shuffleQuick(); /* eslint-disable-next-line */ }, [subject, qu
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex gap-2">
-                <Select value={topic} onValueChange={(v) => setTopic(v)}>
+                <Select value={topic} onValueChange={(v: string) => setTopic(v)}>
                   <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {DEFAULT_TOPICS[subject].map((t) => (
@@ -934,7 +934,7 @@ useEffect(() => { shuffleQuick(); /* eslint-disable-next-line */ }, [subject, qu
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center gap-2">
-                <Input type="number" value={examMinutes} onChange={(e) => setExamMinutes(Number(e.target.value))} />
+                <Input type="number" value={examMinutes} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExamMinutes(Number(e.target.value))} />
                 <span className="text-sm">분</span>
                 <Button className="ml-auto" onClick={startExam}> 시작</Button>
               </div>
