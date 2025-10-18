@@ -122,11 +122,15 @@ function uid(prefix = "id"): string {
 }
 
 function save<T>(key: string, data: T) {
-  localStorage.setItem(key, JSON.stringify(data));
+  try {
+    if (typeof window === "undefined" || !("localStorage" in window)) return;
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {}
 }
 
 function load<T>(key: string, fallback: T): T {
   try {
+    if (typeof window === "undefined" || !("localStorage" in window)) return fallback;
     const raw = localStorage.getItem(key);
     if (!raw) return fallback;
     return JSON.parse(raw) as T;
@@ -134,6 +138,7 @@ function load<T>(key: string, fallback: T): T {
     return fallback;
   }
 }
+
 
 // Simple naive summarizer as an offline fallback (top-N sentence picker by keyword density)
 function naiveSummarize(text: string, n = 5): string {
@@ -416,6 +421,21 @@ async function generateSubjectQuiz(
 // -------------------------------
 // Main App
 // -------------------------------
+class ErrorBoundary extends React.Component<{children:any},{err?:any}>{
+  constructor(p:any){ super(p); this.state = {err:undefined}; }
+  static getDerivedStateFromError(err:any){ return {err}; }
+  componentDidCatch(err:any, info:any){ console.error(err, info); }
+  render(){
+    if (this.state.err) return (
+      <div style={{padding:16,fontFamily:"system-ui"}}>
+        <h2>앗! 화면 구성 중 오류가 발생했어요.</h2>
+        <p style={{color:"#666"}}>브라우저 새로고침을 해보세요. 계속되면 API Key/네트워크 설정을 확인해주세요.</p>
+      </div>
+    );
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const [subject, setSubject] = useState<SubjectKey>("Electromagnetism");
   const [notes, setNotes] = useState<Note[]>(() => load(STORAGE_KEY + ":notes", [] as Note[]));
@@ -699,7 +719,8 @@ useEffect(() => { shuffleQuick(); /* eslint-disable-next-line */ }, [subject, qu
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-neutral-50 text-neutral-900">
       <header className="sticky top-0 z-30 bg-white border-b">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
           
@@ -1017,6 +1038,7 @@ useEffect(() => { shuffleQuick(); /* eslint-disable-next-line */ }, [subject, qu
         <p>© {new Date().getFullYear()} Physics Exam Prep Studio — Crafted for E&M · Modern · Analytical Mechanics</p>
       </footer>
     </div>
+    </ErrorBoundary>
   );
 }
 
